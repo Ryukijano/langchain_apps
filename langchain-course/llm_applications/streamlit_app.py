@@ -1,5 +1,6 @@
 # streamlit_app.py
 import streamlit as st
+import uuid
 
 st.title("Reasoning Agent")
 
@@ -10,5 +11,5 @@ model_name = st.selectbox("Choose a model:", ["openai", "gemini"])
 user_input = st.text_input("You:", key='input')
 
 if st.button("Send"):
-    response = reasoning_agent(user_input, model_name, session_id)
+    response = cached_reasoning_agent(user_input, model_name, session_id)
     st.write(f"AI: {response}")

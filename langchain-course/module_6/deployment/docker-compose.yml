@@ -1,0 +1,55 @@
+# docker-compose.yml
+volumes:
+  quantum-data:
+    driver: local
+
+services:
+  redis:
+    image: redis:6
+    healthcheck:
+      test: redis-cli ping
+      interval: 5s
+      timeout: 1s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: quantum_transpiler
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - quantum-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 1s
+      retries: 5
+
+  api:
+    build: .
+    command: uvicorn quantum_transpiler.serve:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URI: redis://redis:6379
+      POSTGRES_URI: postgresql://postgres:postgres@postgres:5432/quantum_transpiler
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  ui:
+    build: .
+    command: streamlit run run_streamlit.py
+    ports:
+      - "8501:8501" 
+    environment:
+      API_URL: http://api:8000
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    depends_on:
+      - api

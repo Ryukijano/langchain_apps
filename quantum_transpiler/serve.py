@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from quantum_transpiler.main import create_transpiler_graph
 from quantum_transpiler.utils import detect_framework
+from research_assistant import ResearchAssistant
 
 app = FastAPI(
     title="Quantum Framework Transpiler API",
@@ -13,6 +14,11 @@ app = FastAPI(
 class TranspilerRequest(BaseModel):
     source_code: str
     target_framework: str
+
+class ResearchRequest(BaseModel):
+    topic: str
+    max_analysts: int
+    human_analyst_feedback: str
 
 @app.post("/translate")
 async def translate_circuit(request: TranspilerRequest):
@@ -26,3 +32,13 @@ async def translate_circuit(request: TranspilerRequest):
     })
     
     return {"translated_code": result["translated_code"]}
+
+@app.post("/research")
+async def conduct_research(request: ResearchRequest):
+    assistant = ResearchAssistant()
+    result = assistant.conduct_research(
+        topic=request.topic,
+        max_analysts=request.max_analysts,
+        human_analyst_feedback=request.human_analyst_feedback
+    )
+    return {"research_report": result}

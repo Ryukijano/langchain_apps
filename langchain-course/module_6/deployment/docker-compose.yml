@@ -28,6 +28,19 @@ services:
       timeout: 1s
       retries: 5
 
+  langgraph-server:
+    image: langgraph/langgraph-server:latest
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_URI: redis://redis:6379
+      POSTGRES_URI: postgresql://postgres:postgres@postgres:5432/quantum_transpiler
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
   api:
     build: .
     command: uvicorn quantum_transpiler.serve:app --host 0.0.0.0 --port 8000
@@ -41,6 +54,8 @@ services:
       redis:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      langgraph-server:
         condition: service_healthy
 
   ui:

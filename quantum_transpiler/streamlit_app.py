@@ -6,9 +6,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import HuggingFaceHub
 from quantum_transpiler.main import create_transpiler_graph
 from quantum_transpiler.utils import detect_framework
+from research_assistant import ResearchAssistant
 
 def app():
-    st.title("Quantum Framework Transpiler")
+    st.title("Quantum Framework Transpiler and Research Assistant")
 
     # Model Provider Selection
     provider = st.selectbox(
@@ -63,6 +64,26 @@ def app():
             except Exception as e:
                 st.error(f"Translation failed: {str(e)}")
     elif st.button("Translate") and not api_key:
+        st.warning("Please enter an API key first")
+
+    st.header("Research Assistant")
+    topic = st.text_input("Research Topic")
+    max_analysts = st.number_input("Max Analysts", min_value=1, max_value=10, value=3)
+    human_analyst_feedback = st.text_area("Human Analyst Feedback")
+
+    if st.button("Conduct Research") and api_key:
+        with st.spinner('Conducting research...'):
+            try:
+                assistant = ResearchAssistant()
+                result = assistant.conduct_research(
+                    topic=topic,
+                    max_analysts=max_analysts,
+                    human_analyst_feedback=human_analyst_feedback
+                )
+                st.text_area("Research Report", result["research_report"], height=300)
+            except Exception as e:
+                st.error(f"Research failed: {str(e)}")
+    elif st.button("Conduct Research") and not api_key:
         st.warning("Please enter an API key first")
 
 if __name__ == "__main__":
